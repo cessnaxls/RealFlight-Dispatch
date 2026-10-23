@@ -1,20 +1,24 @@
-# DispatchLink iPad Edition
+# DispatchLink iPad — Full Workflow Port
 
-A responsive web port for iPad Safari, deployed on **Render Free**. No map and no FAA registry downloads.
+A Safari/iPad web adaptation of DispatchlinkV2. The desktop **GlobalAircraftAPI** (OpenSky OAuth/basic/anonymous authentication, session retries, live state retrieval, random shuffle, up-to-600 HexDB checks, filters, and last-arrival lookup) is included directly in `desktop_core.py` **without algorithmic changes**. The FAA registry and Tkinter UI are removed.
 
-## Preservation of aircraft selection logic
-`aircraft_core.py` contains the **verbatim** `GlobalAircraftAPI`, `load_opensky_credentials`, and `parse_adsbx_globe_text` definitions extracted from the user-supplied `DispatchlinkV2(20261023-004755).py`. In particular, `global_random_assignment` still calls `_opensky_states`, shuffles ICAO24 identifiers, examines at most 600 candidates, queries HexDB for each, uses original filters, and looks up OpenSky last arrival. **No new data provider or fallback has been substituted.**
+## Features
+- Global live aircraft assignment, cancellable background job, status/diagnostics
+- ADSBexchange pasted-text extraction and aircraft enrichment
+- FR24 aircraft/airport history paste using the original parser, filterable table
+- Select/add/delete legs; consecutive random trip generation; ETE totals
+- Save rigs on iPad, import/export rig JSON and export text
+- SimBrief OFP URL generation using original desktop helpers
+- Airport departure/arrival links, notes, local persistence
 
-The web app uses the exact same method as the original Tkinter `_generate_global` handler. Unlike desktop, iPad browsers cannot run Tkinter or access a local `credentials.json` on your PC.
+## Deploy free on Render
+1. Upload **contents** of this ZIP to the root of your GitHub repo.
+2. Create a Render Blueprint from `render.yaml`, using the **Free** plan.
+3. Optional OpenSky credentials: add `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET` as Render environment variables (or `OPENSKY_USERNAME` and `OPENSKY_PASSWORD` for legacy accounts). Do **not** commit `credentials.json` to GitHub.
+4. Open the Render HTTPS URL in iPad Safari. You may add it to the Home Screen.
 
-## Deployment
-1. Upload the **contents** of this ZIP to the root of a GitHub repository.
-2. Create a Render Blueprint using `render.yaml`. Free web service; no disk or paid service.
-3. Visit your Render URL from iPad Safari and tap **Generate Global (Live)**.
-4. If the original desktop app uses OpenSky credentials, add them as Render environment variables: `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET` (or `OPENSKY_USERNAME` and `OPENSKY_PASSWORD`). Do not commit secrets to GitHub. Alternatively, a local `credentials.json` is supported for non-cloud usage.
+**Important:** Identical code cannot guarantee identical network results from Render; the provider may throttle or block Render IPs. A long live search is tracked as a background job and returns explicit errors. The original desktop code may perform hundreds of sequential HexDB requests, so searches can be slow. Stop is checked between lookups, not in-flight requests.
 
-## Scope
-The original 4,478-line desktop program has additional FR24 history table manipulation, multi-leg trip planning, saved rigs, payload generation, and SimBrief OFP automation. **Those modules are not yet ported**. This version includes the live aircraft workflow, ADSBx paste parser, aircraft links, and local notes. The live aircraft selection logic itself is preserved exactly.
+**Persistence:** Notes, rigs and parsed rows are saved in the browser via localStorage. Render Free has no durable disk; clearing Safari website data will erase these local records. Export rig JSON for backup.
 
-## Connectivity
-Render's network identity differs from your PC. The same algorithm cannot guarantee identical API availability. Provider failures show diagnostics rather than invented aircraft. The original algorithm can make up to 600 sequential HexDB requests and may take time.
+**Scope:** This is a web port of the desktop application's user workflows, not a byte-for-byte recreation of every Tkinter interaction. SimBrief generation opens its options page; it does not submit or validate a flight plan. Live-provider access is not guaranteed.
