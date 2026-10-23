@@ -1,20 +1,20 @@
-# RandomFlight Live
+# DispatchLink iPad Edition
 
-A mobile-friendly, free-tier Render app that picks a random currently airborne aircraft from OpenSky's public state vector feed. No CSV imports, API keys or database required.
+A responsive web port for iPad Safari, deployed on **Render Free**. No map and no FAA registry downloads.
 
-## Deploy
-1. Upload the files at this folder's root to a GitHub repository.
-2. Render → New → Blueprint → select repository and approve the free `render.yaml` service.
-3. Open your Render URL and click **Pick Random Aircraft**.
+## Preservation of aircraft selection logic
+`aircraft_core.py` contains the **verbatim** `GlobalAircraftAPI`, `load_opensky_credentials`, and `parse_adsbx_globe_text` definitions extracted from the user-supplied `DispatchlinkV2(20261023-004755).py`. In particular, `global_random_assignment` still calls `_opensky_states`, shuffles ICAO24 identifiers, examines at most 600 candidates, queries HexDB for each, uses original filters, and looks up OpenSky last arrival. **No new data provider or fallback has been substituted.**
 
-## Limitations
-OpenSky's `/api/states/all` may be rate-limited or inaccessible from some cloud IPs, particularly without credentials. In that case, the app reports the provider error rather than generating fake data. Anonymous access policies can change. Optional `OPENSKY_USERNAME` and `OPENSKY_PASSWORD` environment variables are supported, but OpenSky may require OAuth instead of legacy basic authentication. The current endpoint provides no aircraft registration, type, or route. The app makes one provider request at most every 90 seconds per process; the button randomly picks from the cached airborne snapshot. This is a real snapshot, not a continuous tracking feed. The map requires internet access to Leaflet CDN and OpenStreetMap tiles.
+The web app uses the exact same method as the original Tkinter `_generate_global` handler. Unlike desktop, iPad browsers cannot run Tkinter or access a local `credentials.json` on your PC.
 
-## Local development
-`pip install -r requirements.txt && python app.py`
+## Deployment
+1. Upload the **contents** of this ZIP to the root of a GitHub repository.
+2. Create a Render Blueprint using `render.yaml`. Free web service; no disk or paid service.
+3. Visit your Render URL from iPad Safari and tap **Generate Global (Live)**.
+4. If the original desktop app uses OpenSky credentials, add them as Render environment variables: `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET` (or `OPENSKY_USERNAME` and `OPENSKY_PASSWORD`). Do not commit secrets to GitHub. Alternatively, a local `credentials.json` is supported for non-cloud usage.
 
-## Files
-- `app.py` Flask backend
-- `templates/index.html` frontend
-- `requirements.txt` dependencies
-- `render.yaml` free-tier blueprint
+## Scope
+The original 4,478-line desktop program has additional FR24 history table manipulation, multi-leg trip planning, saved rigs, payload generation, and SimBrief OFP automation. **Those modules are not yet ported**. This version includes the live aircraft workflow, ADSBx paste parser, aircraft links, and local notes. The live aircraft selection logic itself is preserved exactly.
+
+## Connectivity
+Render's network identity differs from your PC. The same algorithm cannot guarantee identical API availability. Provider failures show diagnostics rather than invented aircraft. The original algorithm can make up to 600 sequential HexDB requests and may take time.
