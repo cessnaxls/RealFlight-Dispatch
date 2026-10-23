@@ -1,24 +1,20 @@
-# RealFlight Dispatch 2 — published schedules + live aircraft
+# RandomFlight Live
 
-Flask flight simulator dispatch board with two **distinct** data streams:
-
-1. **Published schedules**: upload a licensed timetable CSV or import its HTTPS CSV URL. Columns: `airline,flight,origin,destination,departure,arrival,aircraft,source`. ISO timestamps must include UTC offset. The application does **not** claim to have a free universal published airline schedule feed.
-2. **Live observations**: query OpenSky `/states/all` in a bounded area around an airport using OurAirports public-domain coordinates. Includes callsign, ICAO24, position, altitude, groundspeed, heading, and on-ground status. These are aircraft near the airport, not verified departures, destinations, scheduled services or aircraft types.
+A mobile-friendly, free-tier Render app that picks a random currently airborne aircraft from OpenSky's public state vector feed. No CSV imports, API keys or database required.
 
 ## Deploy
-
-Upload the **contents** of this folder to GitHub. Create a Render Blueprint using `render.yaml`. Free plan only, no paid disk or database. Render's ephemeral filesystem means SQLite data is lost on restart/deploy; export schedules as CSV for backup.
-
-Optional environment variables: `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` for OpenSky OAuth2. Anonymous OpenSky requests may be rate limited or blocked from Render cloud IPs. Do not use this for actual aviation dispatch.
-
-## Local development
-
-`pip install -r requirements.txt && python app.py`
-
-## API
-
-`GET /api/live?airport=KIND&radius=120` — real observed aircraft; `POST /api/schedule-url` JSON `{ "url": "https://.../published.csv" }`; existing CSV import, flight board, assignment, release and export endpoints remain available.
+1. Upload the files at this folder's root to a GitHub repository.
+2. Render → New → Blueprint → select repository and approve the free `render.yaml` service.
+3. Open your Render URL and click **Pick Random Aircraft**.
 
 ## Limitations
+OpenSky's `/api/states/all` may be rate-limited or inaccessible from some cloud IPs, particularly without credentials. In that case, the app reports the provider error rather than generating fake data. Anonymous access policies can change. Optional `OPENSKY_USERNAME` and `OPENSKY_PASSWORD` environment variables are supported, but OpenSky may require OAuth instead of legacy basic authentication. The current endpoint provides no aircraft registration, type, or route. The app makes one provider request at most every 90 seconds per process; the button randomly picks from the cached airborne snapshot. This is a real snapshot, not a continuous tracking feed. The map requires internet access to Leaflet CDN and OpenStreetMap tiles.
 
-No global commercial timetable, delay/cancellation feed, verified aircraft type, gate, aircraft-to-schedule match, or airport departure inference is implied by OpenSky state vectors. Published schedules must be supplied by a source you are authorized to use. Public free services may change terms and quotas.
+## Local development
+`pip install -r requirements.txt && python app.py`
+
+## Files
+- `app.py` Flask backend
+- `templates/index.html` frontend
+- `requirements.txt` dependencies
+- `render.yaml` free-tier blueprint
